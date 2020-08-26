@@ -11,7 +11,16 @@ exa # ls alternative
 fd # find alternative
 rg (ripgrep) # better grep
 ```
+# Misc
+
+- Alias file (will create alias file replacing existing cli commands)
+- Bash colours
+
 # Installation
+
+**Required commands**: `curl, wget, unzip` 
+
+**Distro**: `Ubuntu` *(Debian-based may work)*
 
 ## Recommended
 ```bash
