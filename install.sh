@@ -200,11 +200,11 @@ for cmd in "${!CHECK_INSTALLED[@]}"; do
 	fi
 done
 
-touch $INSTALL_ALIASES_FILE
-echo -e "$ALIASES" > $INSTALL_ALIASES_FILE
-
 if $INSTALL_ALIASES; then
-	echo -e "\nInstalling aliases to $INSTALL_ALIASES_FILE"
+	echo -e "\nAdding aliases to $INSTALL_ALIASES_FILE"
+	touch $INSTALL_ALIASES_FILE
+	echo -e "$ALIASES" > $INSTALL_ALIASES_FILE
+
 	if test -f $INSTALL_ALIASES_FILE; then
 		echo -e "Adding $INSTALL_ALIASES_FILE to your .bashrc"
 		grep -qxF "source $INSTALL_ALIASES_FILE" ~/.bashrc || echo "source $INSTALL_ALIASES_FILE" >> ~/.bashrc
