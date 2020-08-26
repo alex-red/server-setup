@@ -1,6 +1,16 @@
 # QOL Server Setup
 Scripts for installing QOL/needed packages for Ubuntu servers
 
+# Packages
+```bash
+micro # CLI text editor (similar to sublime text)
+bat # cat alternative
+htop # top alternative
+dust # du -sh alternative
+exa # ls alternative
+fd # find alternative
+rg (ripgrep) # better grep
+```
 # Installation
 
 ## Recommended
