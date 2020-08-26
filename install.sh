@@ -29,6 +29,7 @@ rg_source="https://github.com/BurntSushi/ripgrep/releases/download/11.0.2/ripgre
 # NOTE: doing this will override some native cli commands which may interfere with other scripts
 INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
 INSTALL_ALIASES_FILE=~/.custom-cli-aliases
+BASH_COLOURS=true # will add bash colors 
 
 ### Variables
 
@@ -211,6 +212,12 @@ if $INSTALL_ALIASES; then
 	fi
 fi
 
+if $BASH_COLOURS; then
+	echo -e "Enabled bash colours"
+	colors="PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '"
+	grep -qxF "$colors" ~/.bashrc || echo "$colors" >> ~/.bashrc
+fi
+
 echo -e "\n\e[33m\e[34mSuccessfully Installed:"
 echo -e "\e[33m=======================\n"
 
@@ -232,4 +239,4 @@ for cmd in ${SKIPPED[*]}; do
 	echo -e "\e[1m$cmd"
 done
 
-
+echo -e "\n\e[33mDone! You should reload bash"
