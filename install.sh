@@ -9,6 +9,8 @@
 #
 
 ### Config
+
+### Packages to install
 micro=true # text editor
 bat=true # cat alternative
 bat_source="https://github.com/sharkdp/bat/releases/download/v0.15.4/bat_0.15.4_amd64.deb"
@@ -22,12 +24,19 @@ fd_source="https://github.com/sharkdp/fd/releases/download/v8.1.1/fd_8.1.1_amd64
 rg=true # better grep
 rg_source="https://github.com/BurntSushi/ripgrep/releases/download/11.0.2/ripgrep_11.0.2_amd64.deb"
 
+### Other configs
+
+# NOTE: doing this will override some native cli commands which may interfere with other scripts
+INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
+INSTALL_ALIASES_FILE=~/.custom-cli-aliases
+
 ### Variables
 
 FAILED=()
 SUCCESS=()
 SKIPPED=()
-CHECK_INSTALLED=("micro" "bat" "htop" "dust" "exa" "fd" "rg")
+declare -A CHECK_INSTALLED
+CHECK_INSTALLED=( ["micro"]="micro" ["bat"]="cat" ["htop"]="top" ["dust"]="du" ["exa"]="ls" ["fd"]="find" ["rg"]="rg" )
 
 ### Helper Functions
 
@@ -172,24 +181,37 @@ else
 	rm rg.deb
 fi
 
-### Results
+### Post Processing
+ALIASES=""
 
-for cmd in ${CHECK_INSTALLED[*]}; do
+for cmd in "${!CHECK_INSTALLED[@]}"; do
+	cmd_alias="${CHECK_INSTALLED[$cmd]}"
 	if ${!cmd}; then
-	
-		if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
-		    if command -v "$cmd" &> /dev/null; then
-    			SUCCESS+=("$cmd")	
-    		else
-    			FAILED+=("$cmd")
-    		fi
-		fi
-		
+	    if command -v "$cmd" &> /dev/null; then
+   			if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
+	   			SUCCESS+=("$cmd")	
+		   	fi
+	  		ALIASES="${ALIASES} alias $cmd_alias=$cmd\n"  	
+   		else
+			if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
+   		   		FAILED+=("$cmd")
+		   	fi
+   		fi
 	fi
-
 done
 
-echo -e "\n\n\e[33m\e[34mSuccessfully Installed:"
+touch $INSTALL_ALIASES_FILE
+echo -e "$ALIASES" > $INSTALL_ALIASES_FILE
+
+if $INSTALL_ALIASES; then
+	echo -e "\nInstalling aliases to $INSTALL_ALIASES_FILE"
+	if test -f $INSTALL_ALIASES_FILE; then
+		echo -e "Adding $INSTALL_ALIASES_FILE to your .bashrc"
+		grep -qxF "source $INSTALL_ALIASES_FILE" ~/.bashrc || echo "source $INSTALL_ALIASES_FILE" >> ~/.bashrc
+	fi
+fi
+
+echo -e "\n\e[33m\e[34mSuccessfully Installed:"
 echo -e "\e[33m=======================\n"
 
 for cmd in ${SUCCESS[*]}; do
@@ -209,3 +231,5 @@ echo -e "\e[33m=======================\n"
 for cmd in ${SKIPPED[*]}; do
 	echo -e "\e[1m$cmd"
 done
+
+
