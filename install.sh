@@ -139,8 +139,14 @@ for package in "${!PACKAGE_MAP[@]}"; do
 
   # if the package binary exists then move it to /usr/local/bin
   if [ -f "./$package" ]; then
-    # mv the package to /usr/local/bin
-    sudo mv $package /usr/local/bin/
+
+    if [[ "$package" == "rg" ]]; then
+      sudo mv ./rg/rg /usr/local/bin/rg
+      rm -rf ./rg
+    else
+      sudo mv $package /usr/local/bin/
+    fi
+
     echo_color "Successfully installed $package!" "green"
   else
     echo_color "Failed to install $package!" "red"
@@ -176,7 +182,7 @@ for cmd in "${!PACKAGE_MAP[@]}"; do
     if [[ ! -z "$cmd_alias" ]]; then
       ALIASES="${ALIASES}alias $cmd_alias=$cmd\n"
     fi
-    
+
   else
     if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
       FAILED+=("$cmd")
