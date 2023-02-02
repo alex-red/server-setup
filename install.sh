@@ -37,11 +37,16 @@ exists()
 
 ### Config
 
+# IS_ARM is true if the system is arm64 or aarch64
+IS_ARM=$(uname -m | grep -E "aarch64|arm64" &> /dev/null; echo $?)
+
 ### Packages to install
 micro=true # text editor
 bat=true # cat alternative
 bat_version=$(get_latest_release "sharkdp/bat")
-bat_source="https://github.com/sharkdp/bat/releases/download/v${bat_version}/bat_${bat_version}_amd64.deb"
+# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
+bat_filename="bat_${bat_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)"
+bat_source="https://github.com/sharkdp/bat/releases/download/v${bat_version}/${bat_filename}"
 htop=true
 dust=true # du -sh alternative
 dust_version=$(get_latest_release "bootandy/dust")
@@ -51,10 +56,14 @@ exa_version=$(get_latest_release "ogham/exa")
 exa_source="https://github.com/ogham/exa/releases/download/v${exa_version}/exa-linux-x86_64-v${exa_version}.zip"
 fd=true # find command alternative
 fd_version=$(get_latest_release "sharkdp/fd")
-fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/fd_${fd_version}_amd64.deb"
+# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
+fd_filename="fd_${fd_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)" # musl is a lightweight libc implementation for linux, it's used to make the binary smaller and more portabl
+fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/${fd_filename}"
 rg=true # better grep
 rg_version=$(get_latest_release "BurntSushi/ripgrep")
-rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/ripgrep_${rg_version}_amd64.deb"
+# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
+rg_filename="ripgrep_${rg_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)"
+rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/${rg_filename}"
 
 ### Other configs
 
@@ -119,13 +128,27 @@ if exists bat; then
 else
 
 	echo "Downloading bat from $bat_source"
-	wget $bat_source -O bat.deb
-	if test -f "./bat.deb"; then
-		sudo dpkg -i bat.deb
-		echo "Installed Bat."
-	else
-		echo "Failed to download bat from $bat_source."
-	fi
+  # if $bat_source ends in .tar.gz then use tar
+  if [[ $bat_source == *.tar.gz ]]; then
+    wget $bat_source -O bat.tar.gz
+    mkdir bat
+    tar xzf bat.tar.gz -C ./bat
+    if test -f ./bat/*/bat; then
+      sudo mv ./bat/*/bat /usr/bin
+      echo "Installed Bat."
+    else
+      echo "Failed to download bat from $bat_source."
+    fi
+    rm -rf bat
+  else
+    wget $bat_source -O bat.deb
+    if test -f "./bat.deb"; then
+      sudo dpkg -i bat.deb
+      echo "Installed Bat."
+    else
+      echo "Failed to download bat from $bat_source."
+    fi
+  fi
 
 	rm bat.deb
 fi
