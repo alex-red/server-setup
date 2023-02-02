@@ -38,7 +38,7 @@ exists()
 ### Config
 
 # IS_ARM is true if the system is arm64 or aarch64
-IS_ARM=$(uname -m | grep -E "aarch64|arm64" &> /dev/null; echo $?)
+IS_ARM=$(if [ $(uname -m) == "aarch64" ] || [ $(uname -m) == "arm64" ]; then echo 1; else echo 0; fi)
 
 ### Packages to install
 micro=true # text editor
