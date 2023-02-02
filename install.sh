@@ -50,10 +50,14 @@ bat_source="https://github.com/sharkdp/bat/releases/download/v${bat_version}/${b
 htop=true
 dust=true # du -sh alternative
 dust_version=$(get_latest_release "bootandy/dust")
-dust_source="https://github.com/bootandy/dust/releases/download/v${dust_version}/dust-v${dust_version}-x86_64-unknown-linux-gnu.tar.gz"
+# if IS_ARM then return "arm-unknown-linux-gnueabihf.tar.gz" otherwise "x86_64-unknown-linux-gnu.tar.gz"
+dust_filename="dust-v${dust_version}-$(if [ $IS_ARM -eq 1 ]; then echo "arm-unknown-linux-gnueabihf.tar.gz"; else echo "x86_64-unknown-linux-gnu.tar.gz"; fi)"
+dust_source="https://github.com/bootandy/dust/releases/download/v${dust_version}/${dust_filename}"
 exa=true # ls alternative
 exa_version=$(get_latest_release "ogham/exa")
-exa_source="https://github.com/ogham/exa/releases/download/v${exa_version}/exa-linux-x86_64-v${exa_version}.zip"
+# if IS_ARM then return "exa-linux-armv7-v" otherwise "exa-linux-x86_64-v"
+exa_filename="$(if [ $IS_ARM -eq 1 ]; then echo "exa-linux-armv7-v"; else echo "exa-linux-x86_64-v"; fi)${exa_version}.zip"
+exa_source="https://github.com/ogham/exa/releases/download/v${exa_version}/$exa_filename"
 fd=true # find command alternative
 fd_version=$(get_latest_release "sharkdp/fd")
 # if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
@@ -62,7 +66,9 @@ fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/${fd_f
 rg=true # better grep
 rg_version=$(get_latest_release "BurntSushi/ripgrep")
 # if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
-rg_filename=$(if [ $IS_ARM -eq 1 ]; then echo "ripgrep-${rg_version}-arm-unknown-linux-gnueabihf.tar.gz"; else echo "ripgrep_${rg_version}_amd64.deb"; fi)
+rg_filename=$(if [ $IS_ARM -eq 1 ]; then echo "ripgrep-version-arm-unknown-linux-gnueabihf.tar.gz"; else echo "ripgrep_version_amd64.deb"; fi)
+# replace rg_filename "version" with rg_version
+rg_filename=${rg_filename/version/$rg_version}
 rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/${rg_filename}"
 
 ### Other configs
