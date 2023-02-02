@@ -8,6 +8,27 @@
 # Recommended distro: Ubuntu
 #
 
+### Other configs
+
+# NOTE: doing this will override some native cli commands which may interfere with other scripts
+INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
+INSTALL_ALIASES_FILE=~/.custom-cli-aliases
+BASH_COLOURS=true # will add bash colors 
+
+### Variables
+
+FAILED=()
+SUCCESS=()
+SKIPPED=()
+DOWNLOAD_PATH="./downloads"
+
+### Pre-checks
+
+if ! command -v curl &> /dev/null; then
+	echo "Curl is not installed! Aborting..."
+	exit 1
+fi
+
 ### Helper Functions
 get_latest_release() {
   git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -35,78 +56,49 @@ exists()
 	fi
 }
 
+# a function to pretty print echo statements with color
+# example: echo_color "This is a message" "green"
+echo_color() {
+  message="$1"
+  color="$2"
+  case $color in
+    "red")
+      echo -e "\e[31m$message\e[0m"
+      ;;
+    "green")
+      echo -e "\e[32m$message\e[0m"
+      ;;
+    "yellow")
+      echo -e "\e[33m$message\e[0m"
+      ;;
+    "blue")
+      echo -e "\e[34m$message\e[0m"
+      ;;
+    "purple")
+      echo -e "\e[35m$message\e[0m"
+      ;;
+    "cyan")
+      echo -e "\e[36m$message\e[0m"
+      ;;
+    *)
+      echo -e "\e[37m$message\e[0m"
+      ;;
+  esac
+}
+
 ### Config
 
-# IS_ARM is true if the system is arm64 or aarch64
-IS_ARM=$(if [ $(uname -m) == "aarch64" ] || [ $(uname -m) == "arm64" ]; then echo 1; else echo 0; fi)
+# install eget if it doesn't exist
+if ! command -v eget &> /dev/null; then
+  echo_color "Installing eget..." "blue"
+  curl -o eget.sh https://zyedidia.github.io/eget.sh
+  shasum -a 256 eget.sh # verify with hash below
+  bash eget.sh
 
-### Packages to install
-micro=true # text editor
-bat=true # cat alternative
-bat_version=$(get_latest_release "sharkdp/bat")
-# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
-bat_filename="bat_${bat_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)"
-bat_source="https://github.com/sharkdp/bat/releases/download/v${bat_version}/${bat_filename}"
-htop=true
-dust=true # du -sh alternative
-dust_version=$(get_latest_release "bootandy/dust")
-# if IS_ARM then return "arm-unknown-linux-gnueabihf.tar.gz" otherwise "x86_64-unknown-linux-gnu.tar.gz"
-dust_filename="dust-v${dust_version}-$(if [ $IS_ARM -eq 1 ]; then echo "arm-unknown-linux-gnueabihf.tar.gz"; else echo "x86_64-unknown-linux-gnu.tar.gz"; fi)"
-dust_source="https://github.com/bootandy/dust/releases/download/v${dust_version}/${dust_filename}"
-exa=true # ls alternative
-exa_version=$(get_latest_release "ogham/exa")
-# if IS_ARM then return "exa-linux-armv7-v" otherwise "exa-linux-x86_64-v"
-exa_filename="$(if [ $IS_ARM -eq 1 ]; then echo "exa-linux-armv7-v"; else echo "exa-linux-x86_64-v"; fi)${exa_version}.zip"
-exa_source="https://github.com/ogham/exa/releases/download/v${exa_version}/$exa_filename"
-fd=true # find command alternative
-fd_version=$(get_latest_release "sharkdp/fd")
-# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
-fd_filename="fd_${fd_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)" # musl is a lightweight libc implementation for linux, it's used to make the binary smaller and more portabl
-fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/${fd_filename}"
-rg=true # better grep
-rg_version=$(get_latest_release "BurntSushi/ripgrep")
-# if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
-rg_filename=$(if [ $IS_ARM -eq 1 ]; then echo "ripgrep-version-arm-unknown-linux-gnueabihf.tar.gz"; else echo "ripgrep_version_amd64.deb"; fi)
-# replace rg_filename "version" with rg_version
-rg_filename=${rg_filename/version/$rg_version}
-rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/${rg_filename}"
-
-### Other configs
-
-# NOTE: doing this will override some native cli commands which may interfere with other scripts
-INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
-INSTALL_ALIASES_FILE=~/.custom-cli-aliases
-BASH_COLOURS=true # will add bash colors 
-
-### Variables
-
-FAILED=()
-SUCCESS=()
-SKIPPED=()
-declare -A CHECK_INSTALLED
-CHECK_INSTALLED=( ["micro"]="micro" ["bat"]="cat" ["htop"]="top" ["dust"]="du" ["exa"]="ls" ["fd"]="find" ["rg"]="rg" )
-DOWNLOAD_PATH="./downloads"
-
-### Pre-checks
-
-if ! command -v curl &> /dev/null; then
-	echo "Curl is not installed! Aborting..."
-	exit 1
+  # mv eget to /usr/local/bin
+  sudo mv eget /usr/local/bin/
+  rm eget.sh
 fi
-
-if ! command -v wget &> /dev/null; then
-	echo "Wget is not installed! Aborting..."
-	exit 1
-fi
-
-if ! command -v unzip &> /dev/null; then
-	echo "Unzip is not installed! Aborting..."
-	exit 1
-fi
-
-### Main
-
-# wait for all get_latest_release functions to finish
 
 # if download folder doesn't exist, create it
 if [ ! -d "$DOWNLOAD_PATH" ]; then
@@ -116,161 +108,76 @@ fi
 # cd into download folder
 cd $DOWNLOAD_PATH
 
-if exists micro; then
-	echo "Skipping Micro"
-else
-	echo "Downloading Micro (Text Editor)"
-	curl https://getmic.ro | bash
-	if test -f "./micro"; then
-		sudo mv micro /usr/bin
-		echo "Installed Micro."
-	else
-		echo "Failed to download Micro."
-	fi
-fi
+# map of all the packages to install to their repository name
+declare -A PACKAGE_MAP
+PACKAGE_MAP=(
+  [unzip]="unzip"
+  [wget]="wget"
+  [micro]="zyedidia/micro"
+  [bat]="sharkdp/bat"
+  [htop]="htop"
+  [dust]="bootandy/dust"
+  [exa]="exa"
+  [fd]="sharkdp/fd"
+  [rg]="BurntSushi/ripgrep"
+)
 
-if exists bat; then
-	echo "Skipping Bat"
-else
-
-	echo "Downloading bat from $bat_source"
-  # if $bat_source ends in .tar.gz then use tar
-  if [[ $bat_source == *.tar.gz ]]; then
-    wget $bat_source -O bat.tar.gz
-    mkdir bat
-    tar xzf bat.tar.gz -C ./bat
-    if test -f ./bat/*/bat; then
-      sudo mv ./bat/*/bat /usr/bin
-      echo "Installed Bat."
-    else
-      echo "Failed to download bat from $bat_source."
-    fi
-    rm -rf bat
-  else
-    wget $bat_source -O bat.deb
-    if test -f "./bat.deb"; then
-      sudo dpkg -i bat.deb
-      echo "Installed Bat."
-    else
-      echo "Failed to download bat from $bat_source."
-    fi
+# for each package in the map check if it exists and if not then install it
+for package in "${!PACKAGE_MAP[@]}"; do
+  if exists "$package"; then
+    continue
   fi
 
-	rm bat.deb
-fi
-
-if exists htop; then
-	echo "Skipping htop"
-else
-	echo "Downloading htop"
-	sudo apt install htop -y
-
-	if exists htop; then
-		echo "Installed htop"
-	else
-		echo "Failed to install htop"
-	fi
-fi
-
-
-if exists dust; then
-	echo "Skipping dust"
-else
-	echo "Dowloading dust"
-	wget $dust_source -O dust.tar.gz
-	mkdir dust
-	tar xzf dust.tar.gz -C ./dust
-	if test -f ./dust/*/dust; then
-		sudo mv ./dust/*/dust /usr/bin
-		echo "Installed dust"
-	else
-		echo "Failed to dowload dust"
-	fi
-
-	rm -rf dust
-	rm dust.tar.gz
-fi
-
-if exists exa; then
-	echo "Skipping exa"
-else
-	echo "Downloading exa"
-	wget $exa_source -O exa.zip
-	unzip exa.zip
-	if test -f ./bin/exa; then
-		sudo mv ./bin/exa /usr/bin/exa
-		echo "Installed exa"
-	else
-		echo "Failed to download exa"
-	fi
-
-	rm exa.zip
-fi
-
-if exists fd; then
-	echo "Skipping fd"
-else
-
-	echo "Downloading fd from $fd_source"
-	wget $fd_source -O fd.deb
-	if test -f "./fd.deb"; then
-		sudo dpkg -i fd.deb
-		echo "Installed fd."
-	else
-		echo "Failed to download fd from $fd_source."
-	fi
-
-	rm fd.deb
-fi
-
-if exists rg; then
-	echo "Skipping ripgrep"
-else
-  # if $rg_source ends in .tar.gz then use tar
-  if [[ $rg_source == *.tar.gz ]]; then
-    echo "Downloading rg from $rg_source"
-    wget $rg_source -O rg.tar.gz
-    mkdir rg
-    tar xzf rg.tar.gz -C ./rg
-    if test -f ./rg/rg; then
-      sudo mv ./rg/rg /usr/bin
-      echo "Installed ripgrep."
-    else
-      echo "Failed to download ripgrep from $rg_source."
-    fi
-    rm -rf rg
-    rm rg.tar.gz
-  else
-    echo "Downloading rg from $rg_source"
-    wget $rg_source -O rg.deb
-    if test -f "./rg.deb"; then
-      sudo dpkg -i rg.deb
-      echo "Installed ripgrep."
-    else
-      echo "Failed to download ripgrep from $rg_source."
-    fi
-
-    rm rg.deb
+  # if the package does not have / in it then it's a system package
+  if [[ ! "${PACKAGE_MAP[$package]}" == *"/"* ]]; then
+    echo_color "Installing system package: $package" "cyan"
+    sudo apt install -y "${PACKAGE_MAP[$package]}"
+    continue
   fi
-fi
+
+  eget -q -a ^musl "${PACKAGE_MAP[$package]}"
+
+  # if the package binary exists then move it to /usr/local/bin
+  if [ -f "./$package" ]; then
+    # mv the package to /usr/local/bin
+    sudo mv $package /usr/local/bin/
+    echo_color "Successfully installed $package!" "green"
+  else
+    echo_color "Failed to install $package!" "red"
+  fi
+done
 
 ### Post Processing
 ALIASES=""
 
-for cmd in "${!CHECK_INSTALLED[@]}"; do
-	cmd_alias="${CHECK_INSTALLED[$cmd]}"
-	if ${!cmd}; then
-	    if command -v "$cmd" &> /dev/null; then
-   			if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
-	   			SUCCESS+=("$cmd")	
-		   	fi
-	  		ALIASES="${ALIASES} alias $cmd_alias=$cmd\n"  	
-   		else
-			if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
-   		   		FAILED+=("$cmd")
-		   	fi
-   		fi
-	fi
+declare -A COMMAND_ALIAS_MAP
+# map of commands to their aliases
+COMMAND_ALIAS_MAP=(
+  ["micro"]="micro"
+  ["htop"]="top"
+  ["bat"]="cat"
+  ["exa"]="ls"
+  ["fd"]="find"
+  ["rg"]="grep"
+  ["dust"]="du"
+)
+
+# Check if the command from PACKAGE_MAP is installed
+# If it is, add it to the list of success
+# If it isn't, add it to the list of failed
+for cmd in "${!PACKAGE_MAP[@]}"; do
+	cmd_alias="${COMMAND_ALIAS_MAP[$cmd]}"
+  if command -v "$cmd" &> /dev/null; then
+    if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
+      SUCCESS+=("$cmd")
+    fi
+
+    ALIASES="${ALIASES}alias $cmd_alias=$cmd\n"
+  else
+    if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
+      FAILED+=("$cmd")
+    fi
+  fi
 done
 
 if $INSTALL_ALIASES; then
