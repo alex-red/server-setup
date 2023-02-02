@@ -8,38 +8,16 @@
 # Recommended distro: Ubuntu
 #
 
-### Config
-
-### Packages to install
-micro=true # text editor
-bat=true # cat alternative
-bat_source="https://github.com/sharkdp/bat/releases/download/v0.15.4/bat_0.15.4_amd64.deb"
-htop=true
-dust=true # du -sh alternative
-dust_source="https://github.com/bootandy/dust/releases/download/v0.5.2/dust-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
-exa=true # ls alternative
-exa_source="https://github.com/ogham/exa/releases/download/v0.9.0/exa-linux-x86_64-0.9.0.zip"
-fd=true # find command alternative
-fd_source="https://github.com/sharkdp/fd/releases/download/v8.1.1/fd_8.1.1_amd64.deb"
-rg=true # better grep
-rg_source="https://github.com/BurntSushi/ripgrep/releases/download/11.0.2/ripgrep_11.0.2_amd64.deb"
-
-### Other configs
-
-# NOTE: doing this will override some native cli commands which may interfere with other scripts
-INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
-INSTALL_ALIASES_FILE=~/.custom-cli-aliases
-BASH_COLOURS=true # will add bash colors 
-
-### Variables
-
-FAILED=()
-SUCCESS=()
-SKIPPED=()
-declare -A CHECK_INSTALLED
-CHECK_INSTALLED=( ["micro"]="micro" ["bat"]="cat" ["htop"]="top" ["dust"]="du" ["exa"]="ls" ["fd"]="find" ["rg"]="rg" )
-
 ### Helper Functions
+get_latest_release() {
+  git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
+    grep '"tag_name":' |                                            # Get tag line
+    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+    )
+  
+
+  git_version=$(echo $git_version | sed 's/v//g') # removes V from the result
+}
 
 exists()
 {
@@ -57,7 +35,44 @@ exists()
 	fi
 }
 
-###
+### Config
+
+### Packages to install
+micro=true # text editor
+bat=true # cat alternative
+bat_version=$(get_latest_release "sharkdp/bat")
+bat_source="https://github.com/sharkdp/bat/releases/download/v${bat_version}/bat_${bat_version}_amd64.deb"
+htop=true
+dust=true # du -sh alternative
+dust_version=$(get_latest_release "bootandy/dust")
+dust_source="https://github.com/bootandy/dust/releases/download/v${dust_version}/dust-v${dust_version}-x86_64-unknown-linux-gnu.tar.gz"
+exa=true # ls alternative
+exa_version=$(get_latest_release "ogham/exa")
+exa_source="https://github.com/ogham/exa/releases/download/v${exa_version}/exa-linux-x86_64-v${exa_version}.zip"
+fd=true # find command alternative
+fd_version=$(get_latest_release "sharkdp/fd")
+fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/fd_${fd_version}_amd64.deb"
+rg=true # better grep
+rg_version=$(get_latest_release "BurntSushi/ripgrep")
+rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/ripgrep_${rg_version}_amd64.deb"
+
+### Other configs
+
+# NOTE: doing this will override some native cli commands which may interfere with other scripts
+INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
+INSTALL_ALIASES_FILE=~/.custom-cli-aliases
+BASH_COLOURS=true # will add bash colors 
+
+### Variables
+
+FAILED=()
+SUCCESS=()
+SKIPPED=()
+declare -A CHECK_INSTALLED
+CHECK_INSTALLED=( ["micro"]="micro" ["bat"]="cat" ["htop"]="top" ["dust"]="du" ["exa"]="ls" ["fd"]="find" ["rg"]="rg" )
+DOWNLOAD_PATH="./downloads"
+
+### Pre-checks
 
 if ! command -v curl &> /dev/null; then
 	echo "Curl is not installed! Aborting..."
@@ -73,6 +88,16 @@ if ! command -v unzip &> /dev/null; then
 	echo "Unzip is not installed! Aborting..."
 	exit 1
 fi
+
+### Main
+
+# if download folder doesn't exist, create it
+if [ ! -d "$DOWNLOAD_PATH" ]; then
+  mkdir $DOWNLOAD_PATH
+fi
+
+# cd into download folder
+cd $DOWNLOAD_PATH
 
 if exists micro; then
 	echo "Skipping Micro"
@@ -141,8 +166,8 @@ else
 	echo "Downloading exa"
 	wget $exa_source -O exa.zip
 	unzip exa.zip
-	if test -f ./exa-linux-x86_64; then
-		sudo mv ./exa-linux-x86_64 /usr/bin/exa
+	if test -f ./bin/exa; then
+		sudo mv ./bin/exa /usr/bin/exa
 		echo "Installed exa"
 	else
 		echo "Failed to download exa"
@@ -238,5 +263,14 @@ echo -e "\e[33m=======================\n"
 for cmd in ${SKIPPED[*]}; do
 	echo -e "\e[1m$cmd"
 done
+
+### CLEANUP
+echo -e "\n\e[33mCleaning up..."
+
+# cd back to original directory
+cd ..
+
+# remove download folder
+rm -rf $DOWNLOAD_PATH
 
 echo -e "\n\e[33mDone! You should reload bash"
