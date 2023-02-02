@@ -62,7 +62,7 @@ fd_source="https://github.com/sharkdp/fd/releases/download/v${fd_version}/${fd_f
 rg=true # better grep
 rg_version=$(get_latest_release "BurntSushi/ripgrep")
 # if IS_ARM then return "arm64.deb" otherwise "amd64.deb"
-rg_filename="ripgrep_${rg_version}_$(if [ $IS_ARM -eq 1 ]; then echo "arm64.deb"; else echo "amd64.deb"; fi)"
+rg_filename="$(if [ $IS_ARM -eq 1 ]; then echo "ripgrep-${rg_version}-arm-unknown-linux-gnueabihf.tar.gz"; else echo "ripgrep_${rg_version}_amd64.deb"; fi)"
 rg_source="https://github.com/BurntSushi/ripgrep/releases/download/${rg_version}/${rg_filename}"
 
 ### Other configs
@@ -220,16 +220,32 @@ fi
 if exists rg; then
 	echo "Skipping ripgrep"
 else
-	echo "Downloading rg from $rg_source"
-	wget $rg_source -O rg.deb
-	if test -f "./rg.deb"; then
-		sudo dpkg -i rg.deb
-		echo "Installed ripgrep."
-	else
-		echo "Failed to download ripgrep from $rg_source."
-	fi
+  # if $rg_source ends in .tar.gz then use tar
+  if [[ $rg_source == *.tar.gz ]]; then
+    echo "Downloading rg from $rg_source"
+    wget $rg_source -O rg.tar.gz
+    mkdir rg
+    tar xzf rg.tar.gz -C ./rg
+    if test -f ./rg/rg; then
+      sudo mv ./rg/rg /usr/bin
+      echo "Installed ripgrep."
+    else
+      echo "Failed to download ripgrep from $rg_source."
+    fi
+    rm -rf rg
+    rm rg.tar.gz
+  else
+    echo "Downloading rg from $rg_source"
+    wget $rg_source -O rg.deb
+    if test -f "./rg.deb"; then
+      sudo dpkg -i rg.deb
+      echo "Installed ripgrep."
+    else
+      echo "Failed to download ripgrep from $rg_source."
+    fi
 
-	rm rg.deb
+    rm rg.deb
+  fi
 fi
 
 ### Post Processing
