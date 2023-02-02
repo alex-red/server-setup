@@ -15,6 +15,8 @@ get_latest_release() {
     sed -E 's/.*"([^"]+)".*/\1/' |                               # Pluck JSON value
     sed 's/v//g'
     )
+
+  echo $git_version
 }
 
 exists()
@@ -88,6 +90,8 @@ if ! command -v unzip &> /dev/null; then
 fi
 
 ### Main
+
+# wait for all get_latest_release functions to finish
 
 # if download folder doesn't exist, create it
 if [ ! -d "$DOWNLOAD_PATH" ]; then
