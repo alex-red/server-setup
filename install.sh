@@ -12,11 +12,9 @@
 get_latest_release() {
   git_version=$(curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
     grep '"tag_name":' |                                            # Get tag line
-    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+    sed -E 's/.*"([^"]+)".*/\1/' |                               # Pluck JSON value
+    sed 's/v//g'
     )
-  
-
-  git_version=$(echo $git_version | sed 's/v//g') # removes V from the result
 }
 
 exists()
