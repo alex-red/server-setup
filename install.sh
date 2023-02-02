@@ -119,7 +119,7 @@ PACKAGE_MAP=(
   [dust]="bootandy/dust"
   [exa]="exa"
   [fd]="sharkdp/fd"
-  [rg]="BurntSushi/ripgrep"
+  [rg]="ripgrep"
 )
 
 # for each package in the map check if it exists and if not then install it
@@ -140,12 +140,7 @@ for package in "${!PACKAGE_MAP[@]}"; do
   # if the package binary exists then move it to /usr/local/bin
   if [ -f "./$package" ]; then
 
-    if [[ "$package" == "rg" ]]; then
-      sudo mv ./rg/rg /usr/local/bin/rg
-      rm -rf ./rg
-    else
-      sudo mv $package /usr/local/bin/
-    fi
+    sudo mv $package /usr/local/bin/
 
     echo_color "Successfully installed $package!" "green"
   else
