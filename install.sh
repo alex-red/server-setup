@@ -172,7 +172,11 @@ for cmd in "${!PACKAGE_MAP[@]}"; do
       SUCCESS+=("$cmd")
     fi
 
-    ALIASES="${ALIASES}alias $cmd_alias=$cmd\n"
+    # if cmd_alias is not empty then add an alias for it
+    if [[ ! -z "$cmd_alias" ]]; then
+      ALIASES="${ALIASES}alias $cmd_alias=$cmd\n"
+    fi
+    
   else
     if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
       FAILED+=("$cmd")
