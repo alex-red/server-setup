@@ -21,6 +21,7 @@ FAILED=()
 SUCCESS=()
 SKIPPED=()
 DOWNLOAD_PATH="./downloads"
+INSTALL_DOCKER=true
 
 ### Pre-checks
 
@@ -147,6 +148,27 @@ for package in "${!PACKAGE_MAP[@]}"; do
     echo_color "Failed to install $package!" "red"
   fi
 done
+
+# if install docker is true then do a command
+if $INSTALL_DOCKER; then
+  # if exists docker then do nothing
+  if exists "docker"; then
+    echo_color "Skipping docker install..." "yellow"
+  else
+    # install docker
+    echo_color "Installing docker..." "cyan"
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+
+    # add user to docker group
+    echo_color "Adding user to docker group..." "cyan"
+    sudo usermod -aG docker $USER
+
+    newgrp docker # refresh group
+
+    rm get-docker.sh
+  fi
+fi
 
 ### Post Processing
 ALIASES=""
