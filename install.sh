@@ -5,7 +5,7 @@
 # Author: Alex Red
 # Github: https://github.com/alex-red/server-setup
 # Required packages: curl, wget, unzip
-# Recommended distro: Ubuntu
+# Recommended distro: Debian-based (e.g., Ubuntu)
 #
 
 ### Other configs
@@ -26,8 +26,8 @@ INSTALL_DOCKER=true
 ### Pre-checks
 
 if ! command -v curl &> /dev/null; then
-	echo "Curl is not installed! Aborting..."
-	exit 1
+  echo "Curl is not installed! Aborting..."
+  exit 1
 fi
 
 ### Helper Functions
@@ -43,18 +43,18 @@ get_latest_release() {
 
 exists()
 {
-	cmd="$1"
-	if ${!cmd}; then
-		if command -v "$1" &> /dev/null; then
-			echo "$1 already exists!"
-			SKIPPED+=( "$1" )
-			return 0
-		else
-			return 1
-		fi
-	else
-		return 1
-	fi
+  cmd="$1"
+  if ${!cmd}; then
+    if command -v "$1" &> /dev/null; then
+      echo "$1 already exists!"
+      SKIPPED+=( "$1" )
+      return 0
+    else
+      return 1
+    fi
+  else
+    return 1
+  fi
 }
 
 # a function to pretty print echo statements with color
@@ -112,6 +112,7 @@ cd $DOWNLOAD_PATH
 # map of all the packages to install to their repository name
 declare -A PACKAGE_MAP
 PACKAGE_MAP=(
+  [curl]="curl"
   [unzip]="unzip"
   [wget]="wget"
   [micro]="zyedidia/micro"
@@ -178,18 +179,18 @@ declare -A COMMAND_ALIAS_MAP
 COMMAND_ALIAS_MAP=(
   ["micro"]="micro"
   ["htop"]="top"
-  ["bat"]="cat"
-  ["exa"]="ls"
-  ["fd"]="find"
-  ["rg"]="grep"
-  ["dust"]="du"
+  ["bat"]="bat"
+  ["exa"]="exa"
+  ["fd"]="fd"
+  ["rg"]="rg"
+  ["dust"]="dust"
 )
 
 # Check if the command from PACKAGE_MAP is installed
 # If it is, add it to the list of success
 # If it isn't, add it to the list of failed
 for cmd in "${!PACKAGE_MAP[@]}"; do
-	cmd_alias="${COMMAND_ALIAS_MAP[$cmd]}"
+  cmd_alias="${COMMAND_ALIAS_MAP[$cmd]}"
   if command -v "$cmd" &> /dev/null; then
     if [[ ! " ${SKIPPED[@]} " =~ " $cmd " ]]; then
       SUCCESS+=("$cmd")
@@ -208,50 +209,50 @@ for cmd in "${!PACKAGE_MAP[@]}"; do
 done
 
 if $INSTALL_ALIASES; then
-	echo -e "\nAdding aliases to $INSTALL_ALIASES_FILE"
-	touch $INSTALL_ALIASES_FILE
-	echo -e "$ALIASES" > $INSTALL_ALIASES_FILE
+  echo -e "\nAdding aliases to $INSTALL_ALIASES_FILE"
+  touch $INSTALL_ALIASES_FILE
+  echo -e "$ALIASES" > $INSTALL_ALIASES_FILE
 
-	if test -f $INSTALL_ALIASES_FILE; then
-		echo -e "Adding $INSTALL_ALIASES_FILE to your .bashrc"
-		grep -qxF "source $INSTALL_ALIASES_FILE" ~/.bashrc || echo "source $INSTALL_ALIASES_FILE" >> ~/.bashrc
-	fi
+  if test -f $INSTALL_ALIASES_FILE; then
+    echo -e "Adding $INSTALL_ALIASES_FILE to your .bashrc"
+    grep -qxF "source $INSTALL_ALIASES_FILE" ~/.bashrc || echo "source $INSTALL_ALIASES_FILE" >> ~/.bashrc
+  fi
 fi
 
 if $BASH_COLOURS; then
-	echo -e "Enabled bash colours"
-	colors="PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '"
-	grep -qxF "$colors" ~/.bashrc || echo "$colors" >> ~/.bashrc
+  echo -e "Enabled bash colors"
+  colors="PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '"
+  grep -qxF "$colors" ~/.bashrc || echo "$colors" >> ~/.bashrc
 fi
 
 echo -e "\n\e[33m\e[34mSuccessfully Installed:"
 echo -e "\e[33m=======================\n"
 
 for cmd in ${SUCCESS[*]}; do
-	echo -e "\e[1m$cmd - ✅"
+  echo -e "\e[1m$cmd - ✅"
 done
 
 echo -e "\n\e[91mFailed to install:"
 echo -e "\e[33m=======================\n"
 
 for cmd in ${FAILED[*]}; do
-	echo -e "\e[1m$cmd - ❌"
+  echo -e "\e[1m$cmd - ❌"
 done
 
 echo -e "\n\n\e[96mSkipped:"
 echo -e "\e[33m=======================\n"
 
 for cmd in ${SKIPPED[*]}; do
-	echo -e "\e[1m$cmd"
+  echo -e "\e[1m$cmd"
 done
 
 ### CLEANUP
 echo -e "\n\e[33mCleaning up..."
 
-# cd back to original directory
+# cd back to the original directory
 cd ..
 
-# remove download folder
+# remove the download folder
 rm -rf $DOWNLOAD_PATH
 
 echo -e "\n\e[33mDone! You should reload bash"

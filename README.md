@@ -10,6 +10,7 @@ dust # du -sh alternative
 exa # ls alternative
 fd # find alternative
 rg (ripgrep) # better grep
+docker # uses get-docker.sh https://get.docker.com/, potentially dangerous!
 ```
 # Misc
 
