@@ -1,17 +1,32 @@
 # QOL Server Setup
+
 Scripts for installing QOL/needed packages for Ubuntu servers
 
 # Packages
+
 ```bash
-micro # CLI text editor (similar to sublime text)
-bat # cat alternative
-htop # top alternative
-dust # du -sh alternative
-exa # ls alternative
-fd # find alternative
-rg (ripgrep) # better grep
-docker # uses get-docker.sh https://get.docker.com/, potentially dangerous!
+  [tmux]="tmux"
+  [rsync]="rsync"
+  [micro]="zyedidia/micro"         # micro editor, vscode-like editor
+  [bat]="sharkdp/bat"              # bat, cat with syntax highlighting
+  [htop]="htop"                    # htop, top but better
+  [dust]="bootandy/dust"           # dust, du but better
+  [exa]="exa"                      # exa, ls but better
+  [fd]="sharkdp/fd"                # fd, find but better
+  [rg]="ripgrep"                   # rg, grep but better
+  [zoxide]="ajeetdsouza/zoxide"    # zoxide, cd but better
+  [fzf]="junegunn/fzf"             # fzf, fuzzy finder
+  [erd]="solidiquis/erdtree"       # erdtree (erd) - modern disk/file utility, combines du, tree, find, wc and ls
+  [bottom]="ClementTsang/bottom"   # bottom, like top/htop with more features
+  [neofetch]="dylanaraps/neofetch" # neofetch, system info
+
+  docker
+  nerd_fonts
+  fish
+  fisher
+  fisher_tide_theme
 ```
+
 # Misc
 
 - Alias file (will create alias file replacing existing cli commands)
@@ -19,19 +34,13 @@ docker # uses get-docker.sh https://get.docker.com/, potentially dangerous!
 
 # Installation
 
-**Required commands**: `curl, wget, unzip` 
+**Required commands**: `curl, wget, unzip`
 
-**Distro**: `Ubuntu` *(Debian-based may work)*
+**Distro**: `Ubuntu` _(Debian-based may work)_
 
-## Recommended
 ```bash
 git clone https://github.com/alex-red/server-setup.git
 chmod +x install.sh
 # edit install.sh first to set preferences
 ./install.sh
-```
-
-## Not Recommended
-```bash
-curl https://raw.githubusercontent.com/alex-red/server-setup/master/install.sh | bash
 ```
