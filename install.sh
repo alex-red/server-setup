@@ -14,7 +14,8 @@
 INSTALL_ALIASES=true # will create a ~/.custom-cli-aliases file and add to .bashrc replacing original cli tools
 INSTALL_ALIASES_FILE=~/.custom-cli-aliases
 
-INSTALL_CONFIGS=true # will install config files for tmux, micro, etc
+INSTALL_CONFIGS=true    # will install config files for tmux, micro, etc
+OVERWRITE_CONFIGS=false # will overwrite existing configs
 # located in .config
 # should attempt to merge safely with existing configs
 
@@ -27,6 +28,7 @@ NERD_FONT_DIRECT_LINK="https://github.com/ryanoasis/nerd-fonts/raw/090fbbeebe256
 INSTALL_FISH=true        # will install fish shell
 SET_FISH_AS_DEFAULT=true # will set fish as the default shell
 INSTALL_FISH_EXTRAS=true # add Fisher
+INSTALL_FISH_NVM=true    # adds NVM through fisher
 # adds fisher plugins:
 # tide https://github.com/IlanCosman/tide
 
@@ -49,7 +51,6 @@ SKIPPED=()
 declare -A PACKAGE_MAP
 PACKAGE_MAP=(
   [tmux]="tmux"
-  [rsync]="rsync"
   [micro]="zyedidia/micro"         # micro editor, vscode-like editor
   [bat]="sharkdp/bat"              # bat, cat with syntax highlighting
   [htop]="htop"                    # htop, top but better
@@ -140,13 +141,13 @@ echo_color() {
 echo_color "Updating apt..." "blue"
 sudo apt update -y
 
-echo_color "Installing curl, wget, unzip..." "blue"
-sudo apt install -y curl wget unzip
+echo_color "Installing curl, wget, unzip, rsync..." "blue"
+sudo apt install -y curl wget unzip rsync
 
 if [ $? -eq 0 ]; then
   echo_color "All good!" "green"
 else
-  echo_color "Failed to locate curl, wget, unzip!" "red"
+  echo_color "Failed to locate curl, wget, unzip, rsync!" "red"
   exit 1
 fi
 
@@ -346,6 +347,21 @@ if $INSTALL_FISH_EXTRAS; then
         FAILED+=("fisher tide")
       fi
 
+      # install nvm
+      if $INSTALL_FISH_NVM; then
+        echo_color "Installing nvm..." "cyan"
+
+        fisher install jorgebucaran/nvm.fish
+
+        if [ $? -eq 0 ]; then
+          echo_color "Successfully installed nvm!" "green"
+          SUCCESS+=("fisher nvm")
+        else
+          echo_color "Failed to install nvm!" "red"
+          FAILED+=("fisher nvm")
+        fi
+      fi
+
     else
       echo_color "Fisher is not installed, skipping fisher plugins install..." "yellow"
       SKIPPED+=("fisher plugins")
@@ -365,15 +381,15 @@ if $INSTALL_CONFIGS; then
     mv ~/.config ~/.config.bak
   fi
 
-  # clone the config repo
-  git clone
-  if [ $? -eq 0 ]; then
-    echo_color "Successfully cloned configs!" "green"
-    SUCCESS+=("configs")
+  if $OVERWRITE_CONFIGS; then
+    rsync -arP ./config/ ~/.config
+    echo_color "Overwrote existing configs!" "green"
   else
-    echo_color "Failed to clone configs!" "red"
-    FAILED+=("configs")
+    rsync -arP --ignore-existing ./config/ ~/.config
+    echo_color "Merged configs but ignored existing!" "green"
   fi
+
+  echo_color "Successfully installed configs!" "green"
 fi
 
 ### Post Processing
