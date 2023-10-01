@@ -44,3 +44,20 @@ chmod +x install.sh
 # edit install.sh first to set preferences
 ./install.sh
 ```
+
+# Extras/notes
+
+## add sudo (for debian)
+
+```bash
+apt install sudo
+```
+
+## Creating a new non-root user
+
+```bash
+adduser username
+usermod -aG sudo username
+# switch to user
+su - username
+```

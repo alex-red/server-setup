@@ -160,10 +160,9 @@ if ! command -v eget &>/dev/null; then
   echo_color "Installing eget..." "blue"
 
   curl -o eget.sh https://zyedidia.github.io/eget.sh
-  shasum -a 256 eget.sh # verify with hash below
 
   # if the hash is not the same then exit
-  if [[ ! $(shasum -a 256 eget.sh) == "$EGET_HASH" ]]; then
+  if [[ ! $(shasum -a 256 eget.sh) == "$EGET_HASH  eget.sh" ]]; then
     echo_color "Failed to verify eget hash!" "red"
     exit 1
   fi
