@@ -195,7 +195,7 @@ for package in "${!PACKAGE_MAP[@]}"; do
     continue
   fi
 
-  eget -q -a ^musl "${PACKAGE_MAP[$package]}"
+  eget -q "${PACKAGE_MAP[$package]}"
 
   # if the package binary exists then move it to /usr/local/bin
   if [ -f "./$package" ]; then
@@ -223,7 +223,7 @@ if $INSTALL_DOCKER; then
     echo_color "Adding user to docker group..." "cyan"
     sudo usermod -aG docker "$USER"
 
-    newgrp docker # refresh group
+    # newgrp docker # refresh group
 
     rm get-docker.sh
   fi
@@ -381,10 +381,10 @@ if $INSTALL_CONFIGS; then
   fi
 
   if $OVERWRITE_CONFIGS; then
-    rsync -arP ./config/ ~/.config
+    rsync -arP config/ ~/.config
     echo_color "Overwrote existing configs!" "green"
   else
-    rsync -arP --ignore-existing ./config/ ~/.config
+    rsync -arP --ignore-existing config/ ~/.config
     echo_color "Merged configs but ignored existing!" "green"
   fi
 
