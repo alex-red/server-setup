@@ -1,0 +1,15 @@
+[core]
+	editor = micro
+	pager = less
+
+[merge]
+	conflictstyle = diff3
+
+[alias]
+	unstage = restore --staged
+	amend = commit --amend
+[advice]
+	addEmptyPathspec = true
+
+#[includeIf "gitdir:/workspace/school/"]
+#	path = /workspace/school/.gitconfig-school
